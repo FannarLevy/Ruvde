@@ -43,7 +43,7 @@ If ([string]::IsNullOrWhiteSpace($Global:YoutubeDlPath))
 }
 
 [string]$ruvAPIRoot = 'https://api.ruv.is/api/programs/'
-[string]$ruvDownloadRoot = 'http://sip-ruv-vod.dcp.adaptive.level3.net/'
+#[string]$ruvDownloadRoot = 'http://sip-ruv-vod.dcp.adaptive.level3.net/'
 function Main
 {
     [RuvShow]$show = [RuvShow]::new($ShowName, $DownloadDirectory)
@@ -146,8 +146,7 @@ class OnlineSeason : Season
     [Episode[]]$onlineEpisodes
     
     OnlineSeason([String]$title, [String]$showID) : base($title)
-    { ;l
-        ,k \AQlk
+    {         
         $this.showID = $showID
     }
 
