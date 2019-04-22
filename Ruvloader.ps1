@@ -43,7 +43,7 @@ If ([string]::IsNullOrWhiteSpace($Global:YoutubeDlPath))
 }
 
 [string]$ruvAPIRoot = 'https://api.ruv.is/api/programs/'
-#[string]$ruvDownloadRoot = 'http://sip-ruv-vod.dcp.adaptive.level3.net/'
+
 function Main
 {
     [RuvShow]$show = [RuvShow]::new($ShowName, $DownloadDirectory)
@@ -113,8 +113,8 @@ class RuvShow
             ForEach ($onlineEpisode in $onlineSeason.onlineEpisodes)
             {
                 # Get file type from m3u8 download path
-                # http://sip-ruv-vod.dcp.adaptive.level3.net/lokad/2019/02/24/3600kbps/5018006T0.mp4.m3u8 => ".mp4"
-                
+                # http://sip-ruv-vod.dcp.adaptive.level3.net/lokad/2019/02/24/3600kbps/5018006T0.mp4.m3u8 => ".mp4"                
+
                 $m3u8Path = $onlineEpisode.m3u8URL                
                 $m3u8Path = $m3u8Path.Remove($m3u8Path.LastIndexOf('.'))
                 $fileType = $m3u8Path.Substring($m3u8Path.LastIndexOf('.'))
@@ -158,65 +158,10 @@ class OnlineSeason : Season
         $season = ConvertFrom-Json -InputObject $seasonHTML.Content
 
         ForEach ($episode in $season.episodes) 
-        {            
-            $episodeDownloadPath = $this.GetDownloadPath($episode.file)
-            [OnlineEpisode]$newEpisode = [OnlineEpisode]::new($episode.title, $episodeDownloadPath)
+        {
+            [OnlineEpisode]$newEpisode = [OnlineEpisode]::new($episode.title, $episode.file)
             $this.onlineEpisodes += $newEpisode
         }
-    }
-
-    [string] GetDownloadPath([string]$path)
-    {
-        $highestQualityStreamPath = $null
-                                   
-        If ($path.Contains('.m3u8') -eq $false)
-        {
-            Throw "Episode data invalid, expected url which contains .m3u8 definition"
-        }
-                
-        If ($path.Contains('?')) # Path has options to parse through
-        {
-            # split cdn path and episode options
-            #   http://sip-ruv-vod.dcp.adaptive.level3.net/lokad/manifest.m3u8
-            #   streams=2019/03/03/2400kbps/5019180T0.mp4.m3u8:2400,2019/03/03/500kbps/5019180T0.mp4.m3u8:500,2019/03/03/800kbps/5019180T0.mp4.m3u8:800,2019/03/03/1200kbps/5019180T0.mp4.m3u8:1200,2019/03/03/3600kbps/5019180T0.mp4.m3u8:3600"
-            
-            $episodeData = $path.split('?')
-            If ($episodeData.Length -lt 2)
-            {
-                Throw "Episode data invalid, expected url with options"
-            }
-            $episodeCdn = $episodeData[0].Substring(0, ($episodeData[0].LastIndexOf('/') + 1) )            
-            $episodeOptions = $episodeData[1].Split("&")
-            $highestQualityStream = $null            
-            ForEach ($option in $episodeOptions)
-            {                
-                if ($option.StartsWith("streams=") ) 
-                {                    
-                    $streamQualityOptions = $option.replace("streams=", "")
-                    $streamQualityOptions = $streamQualityOptions.split(",")                    
-                    ForEach ($streamQuality in $streamQualityOptions)
-                    {                    
-                        $split = $streamQuality.split(":")
-                        $m3u8Path = $split[0]
-                        $quality = [int]$split[1]
-                        if ($quality -gt $highestQualityStream)
-                        {
-                            $highestQualityStream = $quality
-                            $highestQualityStreamPath = $m3u8Path
-                        }
-                    }
-                }
-            }
-            $episodeDownloadPath = $episodeCdn + $highestQualityStreamPath
-        }
-        Else # No options defined
-        {
-            # http://sip-ruv-vod.dcp.adaptive.level3.net/opid/5019180M1.mp4.m3u8            
-            $m3u8Path = $path.Substring($path.LastIndexOf('/') + 1)
-            $episodeDownloadPath = $m3u8Path
-        }
-        
-        Return $episodeDownloadPath    
     }    
 }
 
